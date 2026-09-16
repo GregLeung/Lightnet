@@ -1,0 +1,73 @@
+openapi: 3.0.2
+
+info:
+  title: Lightnet Weather API
+  description: Weather lookup API for retrieving current conditions for a location.
+  version: 1.0-SNAPSHOT
+
+paths:
+  /v1/weather:
+    get:
+      tags:
+        - weather
+      summary: Get weather for a location
+      operationId: getWeather
+      parameters:
+        - in: query
+          name: location
+          required: true
+          description: Location to fetch weather for, such as "Singapore".
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Weather data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherResponse'
+        '401':
+          description: Location parameter is missing or blank.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: All weather providers are unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    WeatherResponse:
+      type: object
+      required:
+        - wind_speed
+        - temperature_degrees
+      properties:
+        wind_speed:
+          type: number
+          format: double
+          nullable: true
+          description: Wind speed in the weather response.
+        temperature_degrees:
+          type: number
+          format: double
+          nullable: true
+          description: Temperature in degrees.
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - error
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP status code.
+        error:
+          type: string
+          description: Human-readable error message.

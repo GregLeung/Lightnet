@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: Lightnet
+
+weather:
+  cache:
+    duration: 3s
+  weather-stack:
+    base-url: https://api.weatherstack.com
+    access-key: ${WEATHERSTACK_ACCESS_KEY:}
+  open-weather-map:
+    base-url: https://api.openweathermap.org
+    api-key: ${OPENWEATHERMAP_API_KEY:}
