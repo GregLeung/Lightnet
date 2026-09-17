@@ -5,6 +5,7 @@ spring:
 weather:
   cache:
     duration: 3s
+    stale-duration: 24h
   weather-stack:
     base-url: https://api.weatherstack.com
     access-key: ${WEATHERSTACK_ACCESS_KEY:}

@@ -34,6 +34,7 @@ be supplied through environment variables without changing the source code:
 weather:
   cache:
     duration: 3s
+    stale-duration: 24h
   weather-stack:
     base-url: https://api.weatherstack.com
     access-key: ${WEATHERSTACK_ACCESS_KEY:}
@@ -132,6 +133,40 @@ example:
 weather:
   cache:
     duration: 30s
+    stale-duration: 24h
 ```
 
 Spring duration values such as `500ms`, `30s`, `5m`, and `1h` are supported.
+When both weather providers are unavailable, the service serves the most
+recent successful response while it remains in the stale cache. The stale
+cache duration defaults to 24 hours and is independently configurable.
+
+## Implementation
+
+Stale Results are served from the cache when both providers fail. The cache 
+is implemented with 24 hours expiration by default. We could have used a 
+even longer expiration time, but this could make the cache to grow too large.
+That's why trade-offs need to be considered when configuring cache settings.
+
+The full responses of both weather providers are returned, this is to allow
+future enhancements to the service, such as returning more weather information.
+
+## Future Enhancements (if there is more time)
+
+Use distributed caching to allow multiple instances of the service to share the same
+cache. This would allow the service to scale horizontally and handle more
+requests. It would also allow the service to be deployed in a cloud environment such
+as K8s with multiple instances.
+
+Add more logs for a better observability of the service. This would allow us to 
+monitor the service such as usage(when there is a request coming in), 
+performance (the duration to serve the request) and errors (how many 4XX, 5XX in certain
+duration).
+
+Build time level integration tests to ensure we know if there is a breaking change 
+in the provider API. (i.e. using github actions to run the integration tests on a 
+schedule, such as every day or every week and also every build).
+
+More different kind of errors handling, such as when the provider API is down, or when
+the provider API returns an error response. This would allow us to handle different 
+kind of errors and return appropriate responses to the client.

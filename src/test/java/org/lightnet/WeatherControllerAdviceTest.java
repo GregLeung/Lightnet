@@ -30,7 +30,7 @@ class WeatherControllerAdviceTest {
         when(weatherService.getWeather("Singapore,SG"))
                 .thenThrow(new WeatherProviderException("provider failure"));
 
-        mvc.perform(get("/weather").param("location", "Singapore,SG"))
+        mvc.perform(get("/v1/weather").param("location", "Singapore,SG"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.code", is(500)))
@@ -39,7 +39,7 @@ class WeatherControllerAdviceTest {
 
     @Test
     void returnsUnauthorizedWhenLocationIsMissing() throws Exception {
-        mvc.perform(get("/weather"))
+        mvc.perform(get("/v1/weather"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.code", is(401)))
@@ -51,7 +51,7 @@ class WeatherControllerAdviceTest {
         when(weatherService.getWeather("   "))
                 .thenThrow(new LocationBlankException("location must not be blank"));
 
-        mvc.perform(get("/weather").param("location", "   "))
+        mvc.perform(get("/v1/weather").param("location", "   "))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.code", is(401)))

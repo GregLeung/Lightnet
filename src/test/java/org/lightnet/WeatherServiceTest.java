@@ -11,10 +11,13 @@ import org.lightnet.service.WeatherService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +29,17 @@ class WeatherServiceTest {
 
     @Mock
     private OpenWeatherMapProvider fallbackProvider;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache staleCache;
+
+    @org.junit.jupiter.api.BeforeEach
+    void configureCache() {
+        lenient().when(cacheManager.getCache("weather-stale")).thenReturn(staleCache);
+    }
 
     @InjectMocks
     private WeatherService weatherService;
@@ -71,6 +85,21 @@ class WeatherServiceTest {
         assertEquals(fallbackFailure, exception.getCause());
         assertEquals(1, fallbackFailure.getSuppressed().length);
         assertEquals(primaryFailure, fallbackFailure.getSuppressed()[0]);
+    }
+
+    @Test
+    void servesStaleWeatherWhenBothProvidersFail() {
+        var staleResponse = new WeatherResponse(7.0, 22.0);
+        when(primaryProvider.getWeather("Singapore,SG"))
+                .thenThrow(new WeatherProviderException("primary failure"));
+        when(fallbackProvider.getWeather("Singapore,SG"))
+                .thenThrow(new WeatherProviderException("fallback failure"));
+        when(staleCache.get("singapore,sg", WeatherResponse.class)).thenReturn(staleResponse);
+
+        var actual = weatherService.getWeather("Singapore,SG");
+
+        assertEquals(staleResponse, actual);
+        verify(staleCache).get("singapore,sg", WeatherResponse.class);
     }
 
     @Test
